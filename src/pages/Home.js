@@ -31,7 +31,7 @@ function Home() {
     }
 
     // in case of successful data entry redirect to editor page
-    navigate('editor/${roomID}', {
+    navigate(`/editor/${roomID}`, {
       // used to pass data from one route to a different route - here username is being passed
       state: {
         username

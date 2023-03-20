@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Codemirror from "codemirror";
-import { json } from "react-router-dom";
+// import { json } from "react-router-dom";
 // codemirror will import themes from the following node module address
 // use codemirror version 5 or higher to use all the latest features
 import 'codemirror/lib/codemirror.css';
@@ -8,6 +8,7 @@ import 'codemirror/theme/dracula.css';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
+import ACTIONS from '../Actions';
 
 
 const Editor = function () {

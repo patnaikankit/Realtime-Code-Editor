@@ -3,7 +3,10 @@ import ACTIONS from "../Actions";
 import Client from "../components/Client";
 import Editor from "../components/Editor";
 // location is used to use data from a different route
-import { useLocation } from "react-router-dom";
+import { useLocation, reactNavigator, useNavigate, Navigate, useParams } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { initSocket } from '../socket';
+import { Socket } from "socket.io-client";
 
 function EditorPage() {
 
@@ -11,10 +14,17 @@ function EditorPage() {
   // useRef is used so when data is manipulated and you don't want to re-render the page  
   const socketRef = useRef(null);
   const location = useLocation();
+  const codeRef = useRef(null);
+  const reactNavigator = useNavigate();
+  const {roomID} = useParams();
+  // Creating a state to store participants in the sidebar
+  const [client, setClient] = useState([]);
+
+
   useEffect(() => {
     const init = async function () {
       socketRef.current = await initSocket();
-
+  
       // to notify the users that something went wrong while entering the room
       socketRef.current.on('connect_error', (err) => handleErrors(err));
       socketRef.current.on('connect_failed', (err) => handleErrors(err));
@@ -28,19 +38,47 @@ function EditorPage() {
 
       // to notify the server when a new client is joining the room
       socketRef.current.emit(ACTIONS.JOIN,{
-        roomId,
+        roomID,
         // ? is used in case if there is no username js will not show an error
         username: location.state?.username,
       });
+
+      // listening for joined event
+      Socket.current.on(ACTIONS.JOINED, ({client, username, socketId}) => {
+        if(username !== location.state?.username){
+          toast.success(`${username} joined the room.`);
+          console.log(`${username} joined`);
+        }
+
+        setClient(client);
+      })
+
+      //listening for disconnected users
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({socketId,username}) => {
+        toast.success(`${username} left the room.`);
+        setClient((prev) => {
+          return prev.filter(
+              (client) => (client.socketId !== socketId)
+          );
+      }); 
+      })
     };
     init();
+
+    //  always clear the listeners
+    return () => {
+      socketRef.current.disconnect();
+      // unsubscribing the clients who have left
+      socketRef.current.off(ACTIONS.JOINED);
+      socketRef.current.off(ACTIONS.DISCONNECTED);
+    }
   }, []);
 
-  // Creating a state to store participants in the sidebar
-  const [client, setClient] = useState([
-    { socketId: 1, username: "Ankit P" },
-    { socketId: 2, username: "John D" }
-  ])
+  // in case we don't get the username client will be redirected to home page
+  if(!location.state){
+    return <Navigate to="/"></Navigate>
+  }
+
 
   return (
     <div className="Editorpage">
@@ -79,8 +117,7 @@ function EditorPage() {
 
       {/* Actual coding space for the clients */}
       <div className="code-space">
-        <Editor />
-
+        <Editor></Editor>
       </div>
 
     </div>
