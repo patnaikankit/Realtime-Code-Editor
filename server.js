@@ -44,6 +44,11 @@ io.on("connection", function (socket) {
         socket.leave();
     });
 
+    // listening for any code change
+    socket.on(ACTIONS.CODE_CHANGE, ({roomId, code}) => {
+        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {code});
+    })
+
 // in case the user is disconnected - leaves the room
     socket.on('disconnecting',function(){
         const rooms = [...socket.rooms];

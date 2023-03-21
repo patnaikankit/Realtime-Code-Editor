@@ -67,12 +67,30 @@ function EditorPage() {
 
     //  always clear the listeners
     return () => {
-      socketRef.current.disconnect();
-      // unsubscribing the clients who have left
-      socketRef.current.off(ACTIONS.JOINED);
-      socketRef.current.off(ACTIONS.DISCONNECTED);
+      // socketRef.current.disconnect();
+      // // unsubscribing the clients who have left
+      // socketRef.current.off(ACTIONS.JOINED);
+      // socketRef.current.off(ACTIONS.DISCONNECTED);
     }
   }, []);
+
+
+  // to get a copy of the room id
+  async function copyRoomId(){
+    try{
+      await navigator.clipboard.writeText(roomID);
+      toast.success("Room Id has been copied to your clipboard");
+    }
+    catch(err){
+      toast.error("Could not copy room id");
+      console.log(err);
+    }
+  }
+
+  // to leave the room
+  function leaveRoom(){
+    reactNavigator('/');
+  }
 
   // in case we don't get the username client will be redirected to home page
   if(!location.state){
@@ -110,14 +128,14 @@ function EditorPage() {
         </div>
 
         {/* Buttons at the end of the sidebar */}
-        <button className="btn copyBtn">Copy ROOM ID</button>
-        <button className="btn leaveBtn">Leave</button>
+        <button className="btn copyBtn" onClick={copyRoomId}>Copy ROOM ID</button>
+        <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
 
       </div>
 
       {/* Actual coding space for the clients */}
       <div className="code-space">
-        <Editor></Editor>
+        <Editor socketRef={socketRef} roomID={roomID}></Editor>
       </div>
 
     </div>
