@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import Codemirror from "codemirror";
+import React, { useEffect, useRef } from 'react';
+import Codemirror from 'codemirror';
 // import { json } from "react-router-dom";
 // codemirror will import themes from the following node module address
 // use codemirror version 5 or higher to use all the latest features
@@ -9,10 +9,8 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
 import ACTIONS from '../Actions';
-import { act } from "@testing-library/react";
 
-
-const Editor = ({socketRef,roomID}) => {
+const Editor = ({ socketRef, roomId, onCodeChange }) => {
     // to detect changes in the textarea
     const editorRef = useRef(null);
 
@@ -20,31 +18,36 @@ const Editor = ({socketRef,roomID}) => {
     useEffect(() => {
         async function init() {
             // defining all the features of the code-space
-            editorRef.current = Codemirror.fromTextArea(document.getElementById("realtime-editor"), {
+            editorRef.current = Codemirror.fromTextArea(
                 // mode is used specify which language you want to use
                 // dropdown menu needs to be added to select from a wide variety of languages
-                mode: { name: 'javascript', json: true },
-                theme: 'dracula',
-                // enables autoclosing tag features
-                autoCloseTags: true,
-                // enables autoclosing bracket features
-                autoCloseBrackets: true,
-                // to show the line number
-                lineNumbers: true,
-            });
+                document.getElementById('realtimeEditor'),
+                {
+                    mode: { name: 'javascript', json: true },
+                    theme: 'dracula',
+                    // enables autoclosing tag features
+                    autoCloseTags: true,
+                    // enables autoclosing bracket features
+                    autoCloseBrackets: true,
+                    // to show the line number
+                    lineNumbers: true,
+                }
+            );
 
-            editorRef.current.on('change', (instance,changes) => {
+            editorRef.current.on('change', (instance, changes) => {
                 // to specify what kind of event is happening
-                const {origin} = changes;
+                const { origin } = changes;
                 // to access the content from the editor
                 const code = instance.getValue();
-                if(origin !== 'setValue'){
+                // to check for every instance of code change
+                onCodeChange(code);
+                if (origin !== 'setValue') {
                     socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-                        roomID,
+                        roomId,
                         code,
                     });
                 }
-            })
+            });
         }
 
         // calling the function
@@ -52,19 +55,20 @@ const Editor = ({socketRef,roomID}) => {
     }, []);
 
     useEffect(() => {
-        if(socketRef.current){
-        socketRef.current.on(ACTIONS.CODE_CHANGE, ({code}) => {
-            if(code !== null){
-                editorRef.current.setValue(code);
-            }
-        });
-    }
-    return() => {
-        socketRef.current.off(ACTIONS.CODE_CHANGE)
-    }
-    },[socketRef.current])
+        if (socketRef.current) {
+            socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+                if (code !== null) {
+                    editorRef.current.setValue(code);
+                }
+            });
+        }
 
-    return <textarea id="realtime-editor"> </textarea>
-}
+        return () => {
+            socketRef.current.off(ACTIONS.CODE_CHANGE);
+        };
+    }, [socketRef.current]);
+
+    return <textarea id="realtimeEditor"></textarea>;
+};
 
 export default Editor;
